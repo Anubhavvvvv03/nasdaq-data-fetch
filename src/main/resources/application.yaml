@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: nasdaq-assignment
+
+  data:
+    redis:
+      host: valkey
+      port: 6379
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/stocks_db
+    username: postgres
+    password: postgres
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+  mvc:
+    problemdetails:
+      enabled: true
