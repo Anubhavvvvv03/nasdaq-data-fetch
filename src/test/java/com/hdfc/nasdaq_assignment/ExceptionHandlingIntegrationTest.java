@@ -59,7 +59,7 @@ public class ExceptionHandlingIntegrationTest {
 
     @Test
     void whenValidationFails_shouldReturn400ProblemDetail() throws Exception {
-        StockRequest request = new StockRequest(""); // Blank symbol
+        StockRequest request = new StockRequest("");
 
         mockMvc.perform(post("/api/v1/stock")
                 .contentType(MediaType.APPLICATION_JSON)
