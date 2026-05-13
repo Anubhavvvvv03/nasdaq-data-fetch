@@ -6,6 +6,9 @@ public enum ErrorCode {
     // 4xx - Business
     VALIDATION_FAILED("VALIDATION_FAILED", "Input validation failed", HttpStatus.BAD_REQUEST),
     STOCK_NOT_FOUND("STOCK_NOT_FOUND", "Stock not found", HttpStatus.NOT_FOUND),
+    UNAUTHORIZED("UNAUTHORIZED", "User is not authorized to access this resource", HttpStatus.UNAUTHORIZED),
+    ACCESS_DENIED("ACCESS_DENIED", "You do not have permission to access this resource", HttpStatus.FORBIDDEN),
+    USER_ALREADY_EXISTS("USER_ALREADY_EXISTS", "User already exists", HttpStatus.CONFLICT),
     
     // 5xx - Technical
     DATABASE_ERROR("DATABASE_ERROR", "Database operation failed", HttpStatus.INTERNAL_SERVER_ERROR),

@@ -1,6 +1,7 @@
 package com.hdfc.nasdaq_assignment.exception;
 
 import com.hdfc.nasdaq_assignment.dto.ValidationError;
+import com.hdfc.nasdaq_assignment.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,21 +29,20 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
     public ProblemDetail handleBusinessException(BusinessException ex, WebRequest request) {
-        ProblemDetail pd = ProblemDetail.forStatusAndDetail(ex.getStatus(), ex.getMessage());
-        pd.setTitle(ex.getClass().getSimpleName());
-        pd.setProperty("errorCode", ex.getErrorCode());
-        pd.setProperty("traceId", getTraceId());
-        pd.setProperty("timestamp", LocalDateTime.now());
-        pd.setInstance(URI.create(request.getDescription(false).replace("uri=", "")));
-        
-        // Include timeTaken if available
-        Long startTime = (Long) request.getAttribute("startTime", WebRequest.SCOPE_REQUEST);
-        if (startTime != null) {
-            pd.setProperty("timeTaken", (System.currentTimeMillis() - startTime) + " ms");
-        }
-
         log.warn("Business error: {} - {}", ex.getErrorCode(), ex.getMessage());
-        return pd;
+        return createProblemDetail(ex.getStatus(), ex.getClass().getSimpleName(), ex.getMessage(), ex.getErrorCode(), request);
+    }
+
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ProblemDetail handleAuthenticationException(org.springframework.security.core.AuthenticationException ex, WebRequest request) {
+        log.warn("Authentication failed: {}", ex.getMessage());
+        return createProblemDetail(HttpStatus.UNAUTHORIZED, "Authentication Failed", ex.getMessage(), ErrorCode.UNAUTHORIZED.getCode(), request);
+    }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ProblemDetail handleAccessDeniedException(org.springframework.security.access.AccessDeniedException ex, WebRequest request) {
+        log.warn("Access denied: {}", ex.getMessage());
+        return createProblemDetail(HttpStatus.FORBIDDEN, "Access Denied", ex.getMessage(), ErrorCode.ACCESS_DENIED.getCode(), request);
     }
 
     @Override
@@ -69,15 +69,22 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGenericException(Exception ex, WebRequest request) {
         log.error("Unexpected error occurred", ex);
-        
-        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
-        pd.setTitle("Internal Server Error");
-        pd.setDetail(isProduction() ? "An unexpected error occurred" : ex.getMessage());
-        pd.setProperty("errorCode", ErrorCode.INTERNAL_SERVER_ERROR.getCode());
+        String detail = isProduction() ? "An unexpected error occurred" : ex.getMessage();
+        return createProblemDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", detail, ErrorCode.INTERNAL_SERVER_ERROR.getCode(), request);
+    }
+
+    private ProblemDetail createProblemDetail(HttpStatusCode status, String title, String detail, String errorCode, WebRequest request) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, detail);
+        pd.setTitle(title);
+        pd.setProperty("errorCode", errorCode);
         pd.setProperty("traceId", getTraceId());
         pd.setProperty("timestamp", LocalDateTime.now());
         pd.setInstance(URI.create(request.getDescription(false).replace("uri=", "")));
 
+        Long startTime = (Long) request.getAttribute("startTime", WebRequest.SCOPE_REQUEST);
+        if (startTime != null) {
+            pd.setProperty("timeTaken", (System.currentTimeMillis() - startTime) + " ms");
+        }
         return pd;
     }
 

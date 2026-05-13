@@ -61,6 +61,23 @@ Every error response follows the **Problem Details** standard. Example error res
 
 ---
 
+## 🔐 Authentication & Authorization
+
+The microservice is secured using **JWT (JSON Web Tokens)** and Spring Security.
+
+### 1. Authentication Flow
+*   **Signup (`POST /api/v1/auth/signup`)**: Register a new user with a username and password.
+*   **Login (`POST /api/v1/auth/login`)**: Authenticate and receive a JWT token.
+*   **Protected Access**: All stock APIs require the `Authorization: Bearer <token>` header.
+
+### 2. Security Features
+*   **Stateless**: Uses `SessionCreationPolicy.STATELESS` for scalability.
+*   **Standardized 401 Responses**: If a token is missing, invalid, or expired, the system returns a standardized RFC 7807 response with a `401 Unauthorized` status (instead of the default 403).
+*   **Password Hashing**: Uses `BCryptPasswordEncoder` for secure storage in the PostgreSQL `users` table.
+*   **Traceability**: Every security error includes a `traceId` for debugging.
+
+---
+
 ## Technology Stack
 *   **Core**: Java 17, Spring Boot 4.0.6
 *   **Data**: Spring Data JPA, PostgreSQL
